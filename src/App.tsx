@@ -1,149 +1,79 @@
-/* eslint-disable jsx-a11y/label-has-associated-control */
-/* eslint-disable jsx-a11y/control-has-associated-label */
-import React, { useEffect, useState } from 'react';
-import { getTodos } from './api/todos';
-import { TodoList } from './components/TodoList';
+import React, { useEffect, useMemo, useState } from 'react';
+import { getTodos, USER_ID } from './api/todos';
 import { Todo } from './types/Todo';
 import { Filter } from './types/Filter';
-import cn from 'classnames';
+import { Errors } from './types/Errors';
+import { Footer } from './components/Footer';
+import { Header } from './components/Header';
+import { TodoList } from './components/TodoList';
+import { ErrorMessage } from './components/ErrorMessage';
+import { UserWarning } from './UserWarning';
 
 const getFileteredTodos = (todos: Todo[], filter: Filter): Todo[] => {
   return todos.filter(todo => {
-    if (filter === Filter.Completed) {
-      return todo.completed;
+    switch (filter) {
+      case Filter.Completed:
+        return todo.completed;
+      case Filter.Active:
+        return !todo.completed;
+      default:
+        return true;
     }
-
-    if (filter === Filter.Active) {
-      return !todo.completed;
-    }
-
-    return true;
   });
 };
 
 export const App: React.FC = () => {
   const [todosFromServer, setTodosFromServer] = useState<Todo[]>([]);
-  const [error, setError] = useState('');
+  const [errorMessage, setErrorMessage] = useState<Errors>(Errors.Default);
   const [filterOption, setFilterOption] = useState<Filter>(Filter.All);
 
   useEffect(() => {
     getTodos()
       .then(setTodosFromServer)
-      .catch(() => setError('Unable to load todos'))
+      .catch(() => setErrorMessage(Errors.Loading))
       .finally(() =>
         setTimeout(() => {
-          setError('');
+          setErrorMessage(Errors.Default);
         }, 3000),
       );
   }, []);
 
-  const uncompletedTodos = todosFromServer.filter(
-    todo => !todo.completed,
-  ).length;
+  const uncompletedTodosAmount = useMemo(() => {
+    return todosFromServer.filter(todo => !todo.completed).length;
+  }, [todosFromServer]);
 
-  const filteredTodos = getFileteredTodos(todosFromServer, filterOption);
+  const filteredTodos = useMemo(() => {
+    return getFileteredTodos(todosFromServer, filterOption);
+  }, [todosFromServer, filterOption]);
+
+  if (!USER_ID) {
+    return <UserWarning />;
+  }
 
   return (
     <div className="todoapp">
       <h1 className="todoapp__title">todos</h1>
 
       <div className="todoapp__content">
-        <header className="todoapp__header">
-          {/* this button should have `active` class only if all todos are completed */}
-          <button
-            type="button"
-            className="todoapp__toggle-all active"
-            data-cy="ToggleAllButton"
-          />
-
-          {/* Add a todo on form submit */}
-          <form>
-            <input
-              data-cy="NewTodoField"
-              type="text"
-              className="todoapp__new-todo"
-              placeholder="What needs to be done?"
-            />
-          </form>
-        </header>
+        <Header
+          uncompletedTodosAmount={uncompletedTodosAmount}
+          todosLength={todosFromServer.length}
+        />
 
         <section className="todoapp__main" data-cy="TodoList">
-          {/* This is a completed todo */}
           <TodoList todos={filteredTodos} />
         </section>
 
-        {/* Hide the footer if there are no todos */}
         {!!todosFromServer.length && (
-          <footer className="todoapp__footer" data-cy="Footer">
-            <span className="todo-count" data-cy="TodosCounter">
-              {uncompletedTodos} items left
-            </span>
-
-            {/* Active link should have the 'selected' class */}
-            <nav className="filter" data-cy="Filter">
-              <a
-                href="#/"
-                className={cn('filter__link', {
-                  selected: filterOption === Filter.All,
-                })}
-                data-cy="FilterLinkAll"
-                onClick={() => setFilterOption(Filter.All)}
-              >
-                All
-              </a>
-
-              <a
-                href="#/active"
-                className={cn('filter__link', {
-                  selected: filterOption === Filter.Active,
-                })}
-                data-cy="FilterLinkActive"
-                onClick={() => setFilterOption(Filter.Active)}
-              >
-                Active
-              </a>
-
-              <a
-                href="#/completed"
-                className={cn('filter__link', {
-                  selected: filterOption === Filter.Completed,
-                })}
-                data-cy="FilterLinkCompleted"
-                onClick={() => setFilterOption(Filter.Completed)}
-              >
-                Completed
-              </a>
-            </nav>
-
-            {/* this button should be disabled if there are no completed todos */}
-            <button
-              type="button"
-              className="todoapp__clear-completed"
-              data-cy="ClearCompletedButton"
-            >
-              Clear completed
-            </button>
-          </footer>
+          <Footer
+            filterOption={filterOption}
+            uncompletedTodosAmount={uncompletedTodosAmount}
+            setFilterOption={setFilterOption}
+          />
         )}
       </div>
 
-      {/* DON'T use conditional rendering to hide the notification */}
-      {/* Add the 'hidden' class to hide the message smoothly */}
-      <div
-        data-cy="ErrorNotification"
-        // eslint-disable-next-line max-len
-        className={cn(
-          'notification is-danger is-light has-text-weight-normal',
-          { hidden: !error },
-        )}
-      >
-        <button
-          data-cy="HideErrorButton"
-          type="button"
-          className={cn('delete', { hidden: !error })}
-        />
-        {error}
-      </div>
+      <ErrorMessage error={errorMessage} />
     </div>
   );
 };
