@@ -9,19 +9,7 @@ import { TodoList } from './components/TodoList';
 import { ErrorMessage } from './components/ErrorMessage';
 import { UserWarning } from './UserWarning';
 import { handleError } from './utils/handleError';
-
-const getFileteredTodos = (todos: Todo[], filter: Filter): Todo[] => {
-  return todos.filter(todo => {
-    switch (filter) {
-      case Filter.Completed:
-        return todo.completed;
-      case Filter.Active:
-        return !todo.completed;
-      default:
-        return true;
-    }
-  });
-};
+import { getFilteredTodos } from './utils/getFilteredTodos';
 
 export const App: React.FC = () => {
   const [todosFromServer, setTodosFromServer] = useState<Todo[]>([]);
@@ -39,7 +27,7 @@ export const App: React.FC = () => {
   }, [todosFromServer]);
 
   const filteredTodos = useMemo(() => {
-    return getFileteredTodos(todosFromServer, filterOption);
+    return getFilteredTodos(todosFromServer, filterOption);
   }, [todosFromServer, filterOption]);
 
   if (!USER_ID) {
@@ -69,7 +57,10 @@ export const App: React.FC = () => {
         )}
       </div>
 
-      <ErrorMessage error={errorMessage} />
+      <ErrorMessage
+        errorMessage={errorMessage}
+        setErrorMessage={setErrorMessage}
+      />
     </div>
   );
 };
