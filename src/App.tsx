@@ -8,6 +8,7 @@ import { Header } from './components/Header';
 import { TodoList } from './components/TodoList';
 import { ErrorMessage } from './components/ErrorMessage';
 import { UserWarning } from './UserWarning';
+import { handleError } from './utils/handleError';
 
 const getFileteredTodos = (todos: Todo[], filter: Filter): Todo[] => {
   return todos.filter(todo => {
@@ -30,12 +31,7 @@ export const App: React.FC = () => {
   useEffect(() => {
     getTodos()
       .then(setTodosFromServer)
-      .catch(() => setErrorMessage(Errors.Loading))
-      .finally(() =>
-        setTimeout(() => {
-          setErrorMessage(Errors.Default);
-        }, 3000),
-      );
+      .catch(() => handleError(setErrorMessage, Errors.Loading));
   }, []);
 
   const uncompletedTodosAmount = useMemo(() => {

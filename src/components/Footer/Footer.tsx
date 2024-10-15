@@ -3,14 +3,14 @@ import { Filter } from '../../types/Filter';
 import cn from 'classnames';
 
 type Props = {
-  filterOption: Filter;
   uncompletedTodosAmount: number;
+  filterOption: Filter;
   setFilterOption: Dispatch<React.SetStateAction<Filter>>;
 };
 
 export const Footer: FC<Props> = ({
-  filterOption,
   uncompletedTodosAmount,
+  filterOption,
   setFilterOption,
 }) => {
   return (
@@ -20,38 +20,21 @@ export const Footer: FC<Props> = ({
       </span>
 
       <nav className="filter" data-cy="Filter">
-        <a
-          href="#/"
-          className={cn('filter__link', {
-            selected: filterOption === Filter.All,
-          })}
-          data-cy="FilterLinkAll"
-          onClick={() => setFilterOption(Filter.All)}
-        >
-          All
-        </a>
-
-        <a
-          href="#/active"
-          className={cn('filter__link', {
-            selected: filterOption === Filter.Active,
-          })}
-          data-cy="FilterLinkActive"
-          onClick={() => setFilterOption(Filter.Active)}
-        >
-          Active
-        </a>
-
-        <a
-          href="#/completed"
-          className={cn('filter__link', {
-            selected: filterOption === Filter.Completed,
-          })}
-          data-cy="FilterLinkCompleted"
-          onClick={() => setFilterOption(Filter.Completed)}
-        >
-          Completed
-        </a>
+        {Object.values(Filter).map(filter => {
+          return (
+            <a
+              href={filter === 'All' ? '#/' : `#/${filter.toLowerCase()}`}
+              className={cn('filter__link', {
+                selected: filter === filterOption,
+              })}
+              data-cy={`FilterLink${filter}`}
+              key={filter}
+              onClick={() => setFilterOption(filter)}
+            >
+              {filter}
+            </a>
+          );
+        })}
       </nav>
 
       <button
