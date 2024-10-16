@@ -44,9 +44,7 @@ export const App: React.FC = () => {
           todosLength={todosFromServer.length}
         />
 
-        <section className="todoapp__main" data-cy="TodoList">
-          <TodoList todos={filteredTodos} />
-        </section>
+        <TodoList todos={filteredTodos} />
 
         {!!todosFromServer.length && (
           <Footer
